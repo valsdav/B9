@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.TreeMap;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
@@ -18,8 +19,14 @@ public class Variable {
 	private Variance var;
 	private StandardDeviation dev_stan;
 	private int N;
+	// ultimi valori stimati
+	private double mean_l;
+	private double var_l;
+	private double dev_stan_l;
 	private double var_avg;
-	private double dev_stand_avg;
+	private double dev_stan_avg;
+	private double min;
+	private double max;
 
 	public Variable(String id) {
 		this.id = id;
@@ -52,7 +59,7 @@ public class Variable {
 	 * Metodo che esegue tutti i calcoli sulle misure.
 	 */
 	public double[] evaluate() {
-		double[] r = new double[6];
+		double[] r = new double[8];
 		r[0] = N;
 		// media
 		double[] ms = new double[N];
@@ -60,17 +67,21 @@ public class Variable {
 			ms[i] = this.measures.get(i);
 		}
 		this.mean.setData(ms);
-		r[1] = this.mean.evaluate();
+		r[1] = mean_l = this.mean.evaluate();
 		// varianza
 		this.var.setData(ms);
-		r[2] = this.var.evaluate();
+		r[2] = var_l = this.var.evaluate();
 		// varianza della media
 		r[3] = this.var_avg = r[2] / (double) N;
 		// deviazione standard
 		this.dev_stan.setData(ms);
-		r[4] = this.dev_stan.evaluate();
+		r[4] = dev_stan_l = this.dev_stan.evaluate();
 		// deviazione della media
-		r[5] = this.dev_stand_avg = r[4] / Math.sqrt(N);
+		r[5] = this.dev_stan_avg = r[4] / Math.sqrt(N);
+		// min
+		r[6] = min = StatUtils.min(ms);
+		// max
+		r[7] = max = StatUtils.max(ms);
 		return r;
 	}
 
@@ -84,24 +95,108 @@ public class Variable {
 				this.dev_stan.getResult());
 	}
 
+	public ClassSet getClassSet(double interval_size, boolean relative_freq) {
+		// si parte dalla media e si divide in intervalli fino ad arrivare agli
+		// estremi.
+		TreeMap<Double, Double> classset = new TreeMap<>();
+		// prima valori dopo la media
+		double halfint = interval_size / 2;
+		double first_next, first_prev;
+		first_next = mean_l + halfint;
+		first_prev = mean_l - halfint;
+		double current = first_next;
+		while (current <= max) {
+			// si inseriscono le classi
+			classset.put(current + halfint, 0.0);
+			// si va alla classe successiva
+			current = current + interval_size;
+		}
+		// si esegue la stessa operazione andando indietro
+		current = first_prev;
+		while (current >= min) {
+			// si inseriscono le classi
+			classset.put(current - halfint, 0.0);
+			// si va alla classe successiva
+			current = current - interval_size;
+		}
+
+		// ora si devono contare i valori all'interno delle classi
+		double last = this.measures_freq.lastKey();
+		for (double a : classset.keySet()) {
+			double b_left = a - halfint;
+			double b_right = a + halfint;
+			if (b_left > last) {
+				// si esce
+				break;
+			}
+			// si contano tutte le misure comprese tra a e b
+			int count = 0;
+			for (Double d : this.measures_freq.keySet()) {
+				if (d >= b_left && d < b_right) {
+					count += this.measures_freq.get(d);
+				}
+			}
+			double fr;
+			if (relative_freq) {
+				// frequenza relativa
+				fr = (double) count / N;
+			} else {
+				fr = count;
+			}
+			// si inserisce nelle classi
+			classset.put(a, fr);
+			// si prosegue con altri a e b
+			a = a + interval_size;
+			b_left = a - halfint;
+			b_right = a + halfint;
+		}
+		// si restituisce il classset
+		return new ClassSet(classset, interval_size, relative_freq);
+	}
+
+	/**
+	 * Restituisce l'ultimo valore stimato della media
+	 * 
+	 * @return
+	 */
 	public double getMean() {
-		return mean.evaluate();
+		return mean_l;
 	}
 
+	/**
+	 * Restituisce l'ultimo valore stimato della varianza
+	 * 
+	 * @return
+	 */
 	public double getVar() {
-		return var.evaluate();
+		return var_l;
 	}
 
+	/**
+	 * Restituisce l'ultimo valore stimato della varianza della media.
+	 * 
+	 * @return
+	 */
 	public double getVar_avg() {
 		return var_avg;
 	}
 
+	/**
+	 * Restituisce l'ultimo valore stimato della deviazione
+	 * 
+	 * @return
+	 */
 	public double getDev_stan() {
-		return dev_stan.evaluate();
+		return dev_stan_l;
 	}
 
+	/**
+	 * Restituisce l'ultimo valore stimato della deviazione della media
+	 * 
+	 * @return
+	 */
 	public double getDev_stand_avg() {
-		return dev_stand_avg;
+		return dev_stan_avg;
 	}
 
 	public String getId() {
@@ -122,5 +217,13 @@ public class Variable {
 
 	public TreeMap<Double, Integer> getMeasures_freq() {
 		return measures_freq;
+	}
+
+	public double getMin() {
+		return min;
+	}
+
+	public double getMax() {
+		return max;
 	}
 }

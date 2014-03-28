@@ -1,5 +1,6 @@
 package it.b.data;
 
+import java.text.DecimalFormat;
 import java.util.TreeMap;
 
 /**
@@ -20,7 +21,6 @@ public class ClassSet {
 	 * relative, di default è relative
 	 */
 	private boolean relative_freqs = true;
-	
 
 	public ClassSet(TreeMap<Double, Double> freq_map, double interval_size,
 			boolean relative_freqs) {
@@ -51,5 +51,15 @@ public class ClassSet {
 
 	public void setRelative_freqs(boolean relative_freqs) {
 		this.relative_freqs = relative_freqs;
+	}
+
+	@Override
+	public String toString() {
+		DecimalFormat df = new DecimalFormat("##.###");
+		StringBuilder s = new StringBuilder();
+		for (Double cl : this.freq_map.keySet()) {
+			s.append(df.format(cl) + " -- " + df.format(this.freq_map.get(cl))+"\n");
+		}
+		return s.toString();
 	}
 }
