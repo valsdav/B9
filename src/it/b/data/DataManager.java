@@ -12,11 +12,17 @@ public class DataManager {
 	}
 
 	public void addVariable(String id) {
-		variables.put(id, new Variable(id));
+		if (!variables.containsKey(id)) {
+			variables.put(id, new Variable(id));
+		}
 	}
 
 	public Variable getVariable(String id) {
 		return variables.get(id);
+	}
+
+	public boolean containsVariable(String id) {
+		return variables.containsKey(id);
 	}
 
 	public Map<String, Variable> getVariables() {

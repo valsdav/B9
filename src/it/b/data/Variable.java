@@ -16,7 +16,7 @@ public class Variable {
 	private Mean mean;
 	private Variance var;
 	private StandardDeviation dev_stan;
-	private double N;
+	private int N;
 	private double var_avg;
 	private double dev_stand_avg;
 
@@ -29,6 +29,12 @@ public class Variable {
 		this.measures_freq = new TreeMap<>();
 	}
 
+	public void addMeasures(List<Double> ms) {
+		for (Double m : ms) {
+			this.addMeasure(m);
+		}
+	}
+
 	public void addMeasure(double m) {
 		// si aggiunge
 		N += 1;
@@ -39,12 +45,6 @@ public class Variable {
 		} else {
 			measures_freq.put(m, 1);
 		}
-		// si aggiunge alla media
-		this.mean.increment(m);
-		// si aggiunge alla varianza
-		this.var.increment(m);
-		// si aggiunge alla varianza
-		this.dev_stan.increment(m);
 	}
 
 	/**
@@ -54,15 +54,22 @@ public class Variable {
 		double[] r = new double[6];
 		r[0] = N;
 		// media
+		double[] ms = new double[N];
+		for (int i = 0; i <= N - 1; i++) {
+			ms[i] = this.measures.get(i);
+		}
+		this.mean.setData(ms);
 		r[1] = this.mean.evaluate();
 		// varianza
+		this.var.setData(ms);
 		r[2] = this.var.evaluate();
 		// varianza della media
-		r[3] = this.var_avg = this.var.getResult() / N;
+		r[3] = this.var_avg = r[2]/ (double)N;
 		// deviazione standard
+		this.dev_stan.setData(ms);
 		r[4] = this.dev_stan.evaluate();
 		// deviazione della media
-		r[5] = this.dev_stand_avg = this.dev_stan.getResult() / Math.sqrt(N);
+		r[5] = this.dev_stand_avg = r[4] / Math.sqrt(N);
 		return r;
 	}
 
@@ -71,7 +78,7 @@ public class Variable {
 	}
 
 	public double getVar() {
-		return var.getResult();
+		return var.evaluate();
 	}
 
 	public double getVar_avg() {
@@ -79,7 +86,7 @@ public class Variable {
 	}
 
 	public double getDev_stan() {
-		return dev_stan.getResult();
+		return dev_stan.evaluate();
 	}
 
 	public double getDev_stand_avg() {
@@ -90,7 +97,7 @@ public class Variable {
 		return id;
 	}
 
-	public double getN() {
+	public int getN() {
 		return N;
 	}
 
