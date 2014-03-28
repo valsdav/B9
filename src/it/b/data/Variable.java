@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
@@ -64,13 +65,23 @@ public class Variable {
 		this.var.setData(ms);
 		r[2] = this.var.evaluate();
 		// varianza della media
-		r[3] = this.var_avg = r[2]/ (double)N;
+		r[3] = this.var_avg = r[2] / (double) N;
 		// deviazione standard
 		this.dev_stan.setData(ms);
 		r[4] = this.dev_stan.evaluate();
 		// deviazione della media
 		r[5] = this.dev_stand_avg = r[4] / Math.sqrt(N);
 		return r;
+	}
+
+	/**
+	 * Metodo che restituisce la gaussiana ideale ricata dalla variabile
+	 * 
+	 * @return
+	 */
+	public NormalDistribution getNormalDistribution() {
+		return new NormalDistribution(this.mean.getResult(),
+				this.dev_stan.getResult());
 	}
 
 	public double getMean() {
