@@ -171,7 +171,6 @@ public class B9_Main {
 					public void run() {
 						HistogramViewer hist = new HistogramViewer(var.getId(),
 								var, class_set);
-						hist.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 						hist.setBounds(10, 10, 500, 500);
 						RefineryUtilities.centerFrameOnScreen(hist);
 						hist.setVisible(true);

@@ -9,10 +9,12 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.statistics.HistogramType;
+import org.jfree.data.xy.DefaultIntervalXYDataset;
 import org.jfree.ui.ApplicationFrame;
 
 public class HistogramViewer extends ApplicationFrame {
 
+	private static final long serialVersionUID = 1L;
 	private Variable variable;
 	private ClassSet set;
 
@@ -20,26 +22,21 @@ public class HistogramViewer extends ApplicationFrame {
 		super(title);
 		this.variable = var;
 		this.set = set;
-		HistogramDataset data_set = getDataSet(var, set);
+		DefaultIntervalXYDataset data_set = getDataSet(var, set);
 		JFreeChart chart = createChart(var.getId(), data_set);
 		ChartPanel panel = new ChartPanel(chart);
 		setContentPane(panel);
 	}
 
-	private HistogramDataset getDataSet(Variable var, ClassSet set) {
+	private DefaultIntervalXYDataset getDataSet(Variable var, ClassSet set) {
 		// si crea una nuova serie
-		HistogramDataset data_set = new HistogramDataset();
-		if (set.isRelative_freqs()) {
-			data_set.setType(HistogramType.RELATIVE_FREQUENCY);
-		} else {
-			data_set.setType(HistogramType.FREQUENCY);
-		}
+		DefaultIntervalXYDataset data_set = new DefaultIntervalXYDataset();
 		// si aggiungono i dati
-		data_set.addSeries(1, var.getMeasures_array(), set.getNumberOfBins());
+		data_set.addSeries(1, set.getDataForHistogram());
 		return data_set;
 	}
 
-	private JFreeChart createChart(String title, HistogramDataset dataset) {
+	private JFreeChart createChart(String title, DefaultIntervalXYDataset dataset) {
 		JFreeChart chart = ChartFactory.createHistogram(title, "x", "p",
 				dataset, PlotOrientation.VERTICAL, false, false, false);
 		return chart;
