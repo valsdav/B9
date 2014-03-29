@@ -3,12 +3,17 @@ package it.b.main;
 import it.b.data.ClassSet;
 import it.b.data.DataManager;
 import it.b.data.Variable;
+import it.b.view.HistogramViewer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
+
+import javax.swing.JFrame;
+
+import org.jfree.ui.RefineryUtilities;
 
 public class B9_Main {
 
@@ -21,15 +26,19 @@ public class B9_Main {
 	public static void main(String[] args) throws IOException {
 		// inizializzazione dataManager
 		data = new DataManager();
-		out.println("########## B9 ##########");
-		out.print(">> ");
+		out.println("############### B9 ###############");
 		boolean ok = true;
 		while (ok) {
+			out.print(">> ");
 			String cmd = in.readLine();
 
 			switch (cmd) {
 			case "data":
 				data_cycle();
+				break;
+			case "graph":
+				// si avvia la parte grafici
+				graph_cycle();
 				break;
 			}
 
@@ -48,9 +57,13 @@ public class B9_Main {
 			String cmd2 = in.readLine();
 			if (cmd2.equals("")) {
 				continue;
+			} else if (cmd2.equals("exit")) {
+				data_cycle = false;
+				out.println("exit data menu...\n");
+				continue;
 			}
 			String[] p = cmd2.split(" ");
-			if (p.length < 2 && !p[0].equals("exit")) {
+			if (p.length < 2) {
 				out.println("\tInserire parametro variable\n");
 				continue;
 			}
@@ -59,7 +72,7 @@ public class B9_Main {
 			case "create":
 				// si aggiunge la variabile
 				data.addVariable(v);
-				out.print("\tCreata variabile: " + v + "\n");
+				out.println("\tCreata variabile: " + v + "\n");
 				break;
 			case "values":
 				// si stampano i valori
@@ -87,7 +100,7 @@ public class B9_Main {
 				// si inseriscono i valori
 				boolean ok = true;
 				while (ok) {
-					out.print("\tvalue>> ");
+					out.print("\tvalue-" + var2.getId() + ">> ");
 					String s = in.readLine();
 					if (s.equals("")) {
 						continue;
@@ -114,9 +127,57 @@ public class B9_Main {
 				ClassSet class_set = var3.getClassSet(inte, fr_rel);
 				out.println(class_set);
 				break;
-			case "exit":
-				data_cycle = false;
-				out.println("exit data menu...\n");
+			}
+		}
+	}
+
+	/**
+	 * Ciclo che gestisce i comandi sui grafici
+	 * 
+	 * @throws IOException
+	 */
+	private static void graph_cycle() throws IOException {
+		boolean graph_cycle = true;
+		while (graph_cycle) {
+			out.print("graph>> ");
+			String cmd2 = in.readLine();
+			if (cmd2.equals("exit")) {
+				graph_cycle = false;
+				out.println("exit graph menu...\n");
+				continue;
+			}
+			String[] p = cmd2.split(" ");
+			if (p.length < 2) {
+				out.println("\tInserire parametro variable\n");
+				continue;
+			}
+			String v = p[1];
+
+			switch (p[0]) {
+			case "histogram":
+				// si crea l'istogramma
+				final Variable var = data.getVariable(v);
+				if (p.length < 4) {
+					out.println("data>> Inserire parametri:\n"
+							+ " larghezza intervallo, freq relativa (true/false)\n");
+					continue;
+				}
+				double inte = Double.parseDouble(p[2]);
+				boolean fr_rel = Boolean.parseBoolean(p[3]);
+				final ClassSet class_set = var.getClassSet(inte, fr_rel);
+				// si avvia in un nuovo thread
+				Thread thread = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						HistogramViewer hist = new HistogramViewer(var.getId(),
+								var, class_set);
+						hist.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+						hist.setBounds(10, 10, 500, 500);
+						RefineryUtilities.centerFrameOnScreen(hist);
+						hist.setVisible(true);
+					}
+				});
+				thread.start();
 				break;
 			}
 		}

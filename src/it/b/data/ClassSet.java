@@ -1,6 +1,7 @@
 package it.b.data;
 
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -14,6 +15,8 @@ public class ClassSet {
 
 	/** Mappa delle classi|frequenze */
 	private TreeMap<Double, Double> freq_map;
+	/** Lista degli estremi dei bin*/
+	private List<Double> bins;
 	/** ampiezza degli intervalli */
 	private double interval_size;
 	/**
@@ -21,12 +24,17 @@ public class ClassSet {
 	 * relative, di default è relative
 	 */
 	private boolean relative_freqs = true;
+	/** id della variabile relativa */
+	private String var_id;
 
-	public ClassSet(TreeMap<Double, Double> freq_map, double interval_size,
+	public ClassSet(String var_id, TreeMap<Double, Double> freq_map,
+			List<Double> bins, double interval_size,
 			boolean relative_freqs) {
+		this.var_id = var_id;
 		this.freq_map = freq_map;
 		this.interval_size = interval_size;
 		this.relative_freqs = relative_freqs;
+		this.bins= bins;
 	}
 
 	public TreeMap<Double, Double> getFreq_map() {
@@ -53,13 +61,34 @@ public class ClassSet {
 		this.relative_freqs = relative_freqs;
 	}
 
+	public int getNumberOfBins() {
+		return this.freq_map.size();
+	}
+
+	public double getMin() {
+		return this.freq_map.firstKey();
+	}
+
+	public double getMax() {
+		return this.freq_map.lastKey();
+	}
+
 	@Override
 	public String toString() {
 		DecimalFormat df = new DecimalFormat("##.###");
 		StringBuilder s = new StringBuilder();
 		for (Double cl : this.freq_map.keySet()) {
-			s.append(df.format(cl) + " -- " + df.format(this.freq_map.get(cl))+"\n");
+			s.append(df.format(cl) + " -- " + df.format(this.freq_map.get(cl))
+					+ "\n");
 		}
 		return s.toString();
+	}
+
+	public String getVar_id() {
+		return var_id;
+	}
+
+	public List<Double> getBins() {
+		return bins;
 	}
 }

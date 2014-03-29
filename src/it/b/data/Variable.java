@@ -14,6 +14,7 @@ public class Variable {
 
 	private String id;
 	private List<Double> measures;
+	private double[] measures_array;
 	private TreeMap<Double, Integer> measures_freq;
 	private Mean mean;
 	private Variance var;
@@ -66,6 +67,7 @@ public class Variable {
 		for (int i = 0; i <= N - 1; i++) {
 			ms[i] = this.measures.get(i);
 		}
+		this.measures_array= ms;
 		this.mean.setData(ms);
 		r[1] = mean_l = this.mean.evaluate();
 		// varianza
@@ -99,6 +101,7 @@ public class Variable {
 		// si parte dalla media e si divide in intervalli fino ad arrivare agli
 		// estremi.
 		TreeMap<Double, Double> classset = new TreeMap<>();
+		List<Double> bins = new ArrayList<>();
 		// prima valori dopo la media
 		double halfint = interval_size / 2;
 		double first_next, first_prev;
@@ -125,6 +128,8 @@ public class Variable {
 		for (double a : classset.keySet()) {
 			double b_left = a - halfint;
 			double b_right = a + halfint;
+			//si aggiunge ai bin
+			bins.add(b_left);
 			if (b_left > last) {
 				// si esce
 				break;
@@ -151,7 +156,7 @@ public class Variable {
 			b_right = a + halfint;
 		}
 		// si restituisce il classset
-		return new ClassSet(classset, interval_size, relative_freq);
+		return new ClassSet(id,classset, bins,interval_size, relative_freq);
 	}
 
 	/**
@@ -225,5 +230,9 @@ public class Variable {
 
 	public double getMax() {
 		return max;
+	}
+
+	public double[] getMeasures_array() {
+		return measures_array;
 	}
 }
