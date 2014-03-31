@@ -3,6 +3,7 @@ package it.b.main;
 import it.b.data.ClassSet;
 import it.b.data.DataManager;
 import it.b.data.Variable;
+import it.b.view.HistogramGaussViewer;
 import it.b.view.HistogramViewer;
 
 import java.io.BufferedReader;
@@ -82,7 +83,7 @@ public class B9_Main {
 				}
 				out.println();
 				break;
-			case "estimate":
+			case "evaluate":
 				// si stampano i valori statistici
 				Variable var = data.getVariable(v);
 				double[] e = var.evaluate();
@@ -94,7 +95,11 @@ public class B9_Main {
 				out.println("Deviazione ST Media: .." + df.format(e[5]));
 				out.println();
 				break;
-			case "add":
+			case "add-values":
+				if(!data.containsVariable(v)){
+					out.println("Creare prima la variabile...");
+					continue;
+				}
 				Variable var2 = data.getVariable(v);
 				out.println("Inserire un valore e premere invio. (exit) per uscire...");
 				// si inseriscono i valori
@@ -127,6 +132,31 @@ public class B9_Main {
 				ClassSet class_set = var3.getClassSet(inte, fr_rel);
 				out.println(class_set);
 				break;
+			case "class-set-n":
+				// si legge il terzo parametro
+				if (p.length < 4) {
+					out.println("data>> Inserire parametri:\n"
+							+ " numero di intervalli, freq relativa (true/false)\n");
+					continue;
+				}
+				int inte2 = Integer.parseInt(p[2]);
+				boolean fr_rel2 = Boolean.parseBoolean(p[3]);
+				Variable var4 = data.getVariable(v);
+				ClassSet class_set2 = var4.getClassSetNIntervals(inte2, fr_rel2);
+				out.println(class_set2);
+				break;case "class-set-s":
+					// si legge il terzo parametro
+					if (p.length < 4) {
+						out.println("data>> Inserire parametri:\n"
+								+ " larghezza intervallo, freq relativa (true/false)\n");
+						continue;
+					}
+					double sigma_factor = Double.parseDouble(p[2]);
+					boolean fr_rel3 = Boolean.parseBoolean(p[3]);
+					Variable var5 = data.getVariable(v);
+					ClassSet class_set3 = var5.getClassSetSigmaFactor(sigma_factor, fr_rel3);
+					out.println(class_set3);
+					break;
 			}
 		}
 	}
@@ -171,12 +201,38 @@ public class B9_Main {
 					public void run() {
 						HistogramViewer hist = new HistogramViewer(var.getId(),
 								var, class_set);
+						hist.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 						hist.setBounds(10, 10, 500, 500);
 						RefineryUtilities.centerFrameOnScreen(hist);
 						hist.setVisible(true);
 					}
 				});
 				thread.start();
+				break;
+			case "histogram-c":
+				// si crea l'istogramma
+				final Variable var2 = data.getVariable(v);
+				if (p.length < 4) {
+					out.println("data>> Inserire parametri:\n"
+							+ " larghezza intervallo, freq relativa (true/false)\n");
+					continue;
+				}
+				double inte2 = Double.parseDouble(p[2]);
+				boolean fr_rel2 = Boolean.parseBoolean(p[3]);
+				final ClassSet class_set2 = var2.getClassSet(inte2, fr_rel2);
+				// si avvia in un nuovo thread
+				Thread thread2 = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						HistogramGaussViewer hist = new HistogramGaussViewer(var2.getId(),
+								var2, class_set2);
+						hist.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+						hist.setBounds(10, 10, 500, 500);
+						RefineryUtilities.centerFrameOnScreen(hist);
+						hist.setVisible(true);
+					}
+				});
+				thread2.start();
 				break;
 			}
 		}

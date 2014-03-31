@@ -10,6 +10,10 @@ import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
 
+/**
+ * @author archdav
+ * 
+ */
 public class Variable {
 
 	private String id;
@@ -28,6 +32,7 @@ public class Variable {
 	private double dev_stan_avg;
 	private double min;
 	private double max;
+	private boolean evaluated = false;
 
 	public Variable(String id) {
 		this.id = id;
@@ -67,7 +72,7 @@ public class Variable {
 		for (int i = 0; i <= N - 1; i++) {
 			ms[i] = this.measures.get(i);
 		}
-		this.measures_array= ms;
+		this.measures_array = ms;
 		this.mean.setData(ms);
 		r[1] = mean_l = this.mean.evaluate();
 		// varianza
@@ -84,6 +89,7 @@ public class Variable {
 		r[6] = min = StatUtils.min(ms);
 		// max
 		r[7] = max = StatUtils.max(ms);
+		this.evaluated = true;
 		return r;
 	}
 
@@ -93,11 +99,52 @@ public class Variable {
 	 * @return
 	 */
 	public NormalDistribution getNormalDistribution() {
-		return new NormalDistribution(this.mean.getResult(),
-				this.dev_stan.getResult());
+		return new NormalDistribution(this.mean_l, this.dev_stan_l);
 	}
 
+	/**
+	 * Crea class-set dai dati creando intervalli dell'ampiezza di un multiplo
+	 * di sigma. Il multiplo viene passato come parametro.
+	 * 
+	 * @param sigma_factor
+	 * @param relative_freq
+	 * @return
+	 */
+	public ClassSet getClassSetSigmaFactor(double sigma_factor,
+			boolean relative_freq) {
+		if (!evaluated) {
+			return null;
+		}
+		return this.getClassSet(this.dev_stan_l / sigma_factor, relative_freq);
+	}
+
+	/**
+	 * Crea class-set con i dati divisi nel numero di intervalli specificato.
+	 * 
+	 * @param n_intervals
+	 * @param relative_freq
+	 * @return
+	 */
+	public ClassSet getClassSetNIntervals(int n_intervals, boolean relative_freq) {
+		if (!evaluated) {
+			return null;
+		}
+		double n = (this.max - this.min) / (double) n_intervals;
+		return this.getClassSet(n_intervals, relative_freq);
+	}
+
+	/**
+	 * Crea class-set che contiene i dati divisi in intervallo dell'ampiezza
+	 * specificata, intorno alla media.
+	 * 
+	 * @param interval_size
+	 * @param relative_freq
+	 * @return
+	 */
 	public ClassSet getClassSet(double interval_size, boolean relative_freq) {
+		if (!evaluated) {
+			return null;
+		}
 		// si parte dalla media e si divide in intervalli fino ad arrivare agli
 		// estremi.
 		TreeMap<Double, Double> classset = new TreeMap<>();
@@ -128,7 +175,7 @@ public class Variable {
 		for (double a : classset.keySet()) {
 			double b_left = a - halfint;
 			double b_right = a + halfint;
-			//si aggiunge ai bin
+			// si aggiunge ai bin
 			bins.add(b_left);
 			if (b_left > last) {
 				// si esce
@@ -156,7 +203,7 @@ public class Variable {
 			b_right = a + halfint;
 		}
 		// si restituisce il classset
-		return new ClassSet(id,classset, bins,interval_size, relative_freq);
+		return new ClassSet(id, classset, bins, interval_size, relative_freq);
 	}
 
 	/**
@@ -234,5 +281,9 @@ public class Variable {
 
 	public double[] getMeasures_array() {
 		return measures_array;
+	}
+
+	public boolean isEvaluated() {
+		return evaluated;
 	}
 }
