@@ -1,5 +1,11 @@
 package it.b.view;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+
+import javax.swing.JFrame;
+
 import it.b.data.ClassSet;
 import it.b.data.Variable;
 
@@ -22,6 +28,13 @@ public class HistogramViewer extends ApplicationFrame {
 		super(title);
 		this.variable = var;
 		this.set = set;
+		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				setVisible(false);
+			}
+
+		});
 		DefaultIntervalXYDataset data_set = getDataSet(var, set);
 		JFreeChart chart = createChart(var.getId(), data_set);
 		ChartPanel panel = new ChartPanel(chart);
@@ -36,7 +49,8 @@ public class HistogramViewer extends ApplicationFrame {
 		return data_set;
 	}
 
-	private JFreeChart createChart(String title, DefaultIntervalXYDataset dataset) {
+	private JFreeChart createChart(String title,
+			DefaultIntervalXYDataset dataset) {
 		JFreeChart chart = ChartFactory.createHistogram(title, "x", "p",
 				dataset, PlotOrientation.VERTICAL, false, false, false);
 		return chart;

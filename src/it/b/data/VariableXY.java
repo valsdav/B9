@@ -7,12 +7,13 @@ package it.b.data;
  * @author Davide Valsecchi
  * 
  */
-public class VariableY extends Variable {
+public class VariableXY extends Variable {
 
 	private double X;
 
-	public VariableY(String id) {
+	public VariableXY(String id, double x) {
 		super(id);
+		this.X = x;
 	}
 
 	public double getX() {

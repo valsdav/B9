@@ -3,18 +3,25 @@ package it.b.main;
 import it.b.data.ClassSet;
 import it.b.data.DataManager;
 import it.b.data.Variable;
+import it.b.test.ChiTest;
 import it.b.view.HistogramGaussViewer;
 import it.b.view.HistogramViewer;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 
 import javax.swing.JFrame;
 
 import org.jfree.ui.RefineryUtilities;
+import org.json.simple.JSONObject;
 
 public class B9_Main {
 
@@ -41,8 +48,21 @@ public class B9_Main {
 				// si avvia la parte grafici
 				graph_cycle();
 				break;
+			case "test":
+				// ciclo per i test
+				test_cycle();
+				break;
+			case "save":
+				// salvataggio
+				out.print("Project name: ");
+				String name = in.readLine();
+				if (name.equals("")) {
+					out.println("Inserire nome progetto!\n");
+					continue;
+				}
+				saveData(name);
+				break;
 			}
-
 		}
 	}
 
@@ -69,8 +89,19 @@ public class B9_Main {
 				continue;
 			}
 			String v = p[1];
+			// comandi
 			switch (p[0]) {
 			case "create":
+				// si aggiunge la variabile
+				data.addVariable(v);
+				out.println("\tCreata variabile: " + v + "\n");
+				break;
+			case "create-xy":
+				if (p.length < 3) {
+					out.println("data>> Inserire parametri:\n"
+							+ " nome variabile, valore di X\n");
+					continue;
+				}
 				// si aggiunge la variabile
 				data.addVariable(v);
 				out.println("\tCreata variabile: " + v + "\n");
@@ -96,7 +127,7 @@ public class B9_Main {
 				out.println();
 				break;
 			case "add-values":
-				if(!data.containsVariable(v)){
+				if (!data.containsVariable(v)) {
 					out.println("Creare prima la variabile...");
 					continue;
 				}
@@ -105,7 +136,8 @@ public class B9_Main {
 				// si inseriscono i valori
 				boolean ok = true;
 				while (ok) {
-					out.print("\tvalue-" + var2.getId() + ">> ");
+					int i = 1;
+					out.print("\tvalue-" + var2.getId() + "-" + i + ">> ");
 					String s = in.readLine();
 					if (s.equals("")) {
 						continue;
@@ -116,6 +148,7 @@ public class B9_Main {
 					}
 					double m = Double.parseDouble(s);
 					var2.addMeasure(m);
+					i++;
 				}
 				out.println();
 				break;
@@ -142,21 +175,24 @@ public class B9_Main {
 				int inte2 = Integer.parseInt(p[2]);
 				boolean fr_rel2 = Boolean.parseBoolean(p[3]);
 				Variable var4 = data.getVariable(v);
-				ClassSet class_set2 = var4.getClassSetNIntervals(inte2, fr_rel2);
+				ClassSet class_set2 = var4
+						.getClassSetNIntervals(inte2, fr_rel2);
 				out.println(class_set2);
-				break;case "class-set-s":
-					// si legge il terzo parametro
-					if (p.length < 4) {
-						out.println("data>> Inserire parametri:\n"
-								+ " larghezza intervallo, freq relativa (true/false)\n");
-						continue;
-					}
-					double sigma_factor = Double.parseDouble(p[2]);
-					boolean fr_rel3 = Boolean.parseBoolean(p[3]);
-					Variable var5 = data.getVariable(v);
-					ClassSet class_set3 = var5.getClassSetSigmaFactor(sigma_factor, fr_rel3);
-					out.println(class_set3);
-					break;
+				break;
+			case "class-set-s":
+				// si legge il terzo parametro
+				if (p.length < 4) {
+					out.println("data>> Inserire parametri:\n"
+							+ " larghezza intervallo, freq relativa (true/false)\n");
+					continue;
+				}
+				double sigma_factor = Double.parseDouble(p[2]);
+				boolean fr_rel3 = Boolean.parseBoolean(p[3]);
+				Variable var5 = data.getVariable(v);
+				ClassSet class_set3 = var5.getClassSetSigmaFactor(sigma_factor,
+						fr_rel3);
+				out.println(class_set3);
+				break;
 			}
 		}
 	}
@@ -186,7 +222,7 @@ public class B9_Main {
 			switch (p[0]) {
 			case "histogram":
 				// si crea l'istogramma
-				final Variable var = data.getVariable(v);
+				Variable var = data.getVariable(v);
 				if (p.length < 4) {
 					out.println("data>> Inserire parametri:\n"
 							+ " larghezza intervallo, freq relativa (true/false)\n");
@@ -195,23 +231,15 @@ public class B9_Main {
 				double inte = Double.parseDouble(p[2]);
 				boolean fr_rel = Boolean.parseBoolean(p[3]);
 				final ClassSet class_set = var.getClassSet(inte, fr_rel);
-				// si avvia in un nuovo thread
-				Thread thread = new Thread(new Runnable() {
-					@Override
-					public void run() {
-						HistogramViewer hist = new HistogramViewer(var.getId(),
-								var, class_set);
-						hist.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-						hist.setBounds(10, 10, 500, 500);
-						RefineryUtilities.centerFrameOnScreen(hist);
-						hist.setVisible(true);
-					}
-				});
-				thread.start();
+				HistogramViewer hist = new HistogramViewer(var.getId(), var,
+						class_set);
+				hist.setBounds(10, 10, 500, 500);
+				RefineryUtilities.centerFrameOnScreen(hist);
+				hist.setVisible(true);
 				break;
 			case "histogram-c":
 				// si crea l'istogramma
-				final Variable var2 = data.getVariable(v);
+				Variable var2 = data.getVariable(v);
 				if (p.length < 4) {
 					out.println("data>> Inserire parametri:\n"
 							+ " larghezza intervallo, freq relativa (true/false)\n");
@@ -220,21 +248,85 @@ public class B9_Main {
 				double inte2 = Double.parseDouble(p[2]);
 				boolean fr_rel2 = Boolean.parseBoolean(p[3]);
 				final ClassSet class_set2 = var2.getClassSet(inte2, fr_rel2);
-				// si avvia in un nuovo thread
-				Thread thread2 = new Thread(new Runnable() {
-					@Override
-					public void run() {
-						HistogramGaussViewer hist = new HistogramGaussViewer(var2.getId(),
-								var2, class_set2);
-						hist.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-						hist.setBounds(10, 10, 500, 500);
-						RefineryUtilities.centerFrameOnScreen(hist);
-						hist.setVisible(true);
-					}
-				});
-				thread2.start();
+				HistogramGaussViewer hist2 = new HistogramGaussViewer(
+						var2.getId(), var2, class_set2);
+				hist2.setBounds(10, 10, 500, 500);
+				RefineryUtilities.centerFrameOnScreen(hist2);
+				hist2.setVisible(true);
 				break;
 			}
 		}
+	}
+
+	/**
+	 * Ciclo che gestisce i comandi per i test del chi quadro
+	 * 
+	 * @throws IOException
+	 */
+	private static void test_cycle() throws IOException {
+		boolean test_cycle = true;
+		while (test_cycle) {
+			out.print("test>> ");
+			String cmd2 = in.readLine();
+			if (cmd2.equals("exit")) {
+				test_cycle = false;
+				out.println("exit test menu...\n");
+				continue;
+			}
+			String[] p = cmd2.split(" ");
+			if (p.length < 2) {
+				out.println("\tInserire parametro variable\n");
+				continue;
+			}
+			String v = p[1];
+
+			switch (p[0]) {
+			case "histogram-test":
+				// si esegue il test del chi
+				Variable var = data.getVariable(v);
+				double[] res = ChiTest.testChiSquared_Histogram(var);
+				// si stampano i risultati
+				out.println("Chi Quadro: ........................"
+						+ df.format(res[0]));
+				out.println("Chi Quadro ridotto: ................"
+						+ df.format(res[1]));
+				out.println("Probabilità: ......................."
+						+ df.format(res[2]));
+				out.println();
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Metodo che salva i dati su disco. Si salvano in un unico file tutte le
+	 * variabili.
+	 * 
+	 * @throws IOException
+	 */
+	public static void saveData(String name) throws IOException {
+		// si crea un oggetto json
+		JSONObject json = new JSONObject();
+		json.put("project", name);
+		LinkedHashMap<String, LinkedList<Double>> map = new LinkedHashMap<>();
+		for (Variable v : data.getVariables().values()) {
+			LinkedList<Double> ms = new LinkedList<>();
+			for (double m : v.getMeasures()) {
+				ms.add(m);
+			}
+			map.put(v.getId(), ms);
+		}
+		json.putAll(map);
+		String path = System.getProperty("user.home") + File.separator + name
+				+ ".B9";
+		// si scrive l'oggetto
+		FileWriter w = new FileWriter(path);
+		w.write(json.toJSONString());
+		w.close();
+		out.println("Progetto salvato in: " + path);
+	}
+
+	public static void loadData(String path) {
+
 	}
 }

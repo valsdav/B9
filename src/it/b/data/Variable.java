@@ -32,6 +32,7 @@ public class Variable {
 	private double dev_stan_avg;
 	private double min;
 	private double max;
+	private ClassSet last_class_set;
 	private boolean evaluated = false;
 
 	public Variable(String id) {
@@ -113,9 +114,11 @@ public class Variable {
 	public ClassSet getClassSetSigmaFactor(double sigma_factor,
 			boolean relative_freq) {
 		if (!evaluated) {
-			return null;
+			this.evaluate();
 		}
-		return this.getClassSet(this.dev_stan_l / sigma_factor, relative_freq);
+		this.last_class_set = this.getClassSet(this.dev_stan_l / sigma_factor,
+				relative_freq);
+		return last_class_set;
 	}
 
 	/**
@@ -127,10 +130,11 @@ public class Variable {
 	 */
 	public ClassSet getClassSetNIntervals(int n_intervals, boolean relative_freq) {
 		if (!evaluated) {
-			return null;
+			this.evaluate();
 		}
 		double n = (this.max - this.min) / (double) n_intervals;
-		return this.getClassSet(n_intervals, relative_freq);
+		this.last_class_set = this.getClassSet(n, relative_freq);
+		return last_class_set;
 	}
 
 	/**
@@ -143,7 +147,7 @@ public class Variable {
 	 */
 	public ClassSet getClassSet(double interval_size, boolean relative_freq) {
 		if (!evaluated) {
-			return null;
+			this.evaluate();
 		}
 		// si parte dalla media e si divide in intervalli fino ad arrivare agli
 		// estremi.
@@ -203,7 +207,9 @@ public class Variable {
 			b_right = a + halfint;
 		}
 		// si restituisce il classset
-		return new ClassSet(id, classset, bins, interval_size, relative_freq);
+		this.last_class_set = new ClassSet(id, classset, bins, interval_size,
+				relative_freq);
+		return last_class_set;
 	}
 
 	/**
@@ -285,5 +291,9 @@ public class Variable {
 
 	public boolean isEvaluated() {
 		return evaluated;
+	}
+
+	public ClassSet getLast_class_set() {
+		return last_class_set;
 	}
 }

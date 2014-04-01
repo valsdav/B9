@@ -11,9 +11,22 @@ public class DataManager {
 		this.variables = new HashMap<>();
 	}
 
+	/**Metodo che aggiunge una variabile normale
+	 * @param id
+	 */
 	public void addVariable(String id) {
 		if (!variables.containsKey(id)) {
 			variables.put(id, new Variable(id));
+		}
+	}
+	
+	/**Metodo che aggiunge una variabile xy
+	 * @param id
+	 * @param x
+	 */
+	public void addXYVariable(String id,double x) {
+		if (!variables.containsKey(id)) {
+			variables.put(id, new VariableXY(id,x));
 		}
 	}
 
