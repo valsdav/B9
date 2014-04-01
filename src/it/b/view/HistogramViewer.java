@@ -2,7 +2,6 @@ package it.b.view;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
 
@@ -13,8 +12,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.statistics.HistogramDataset;
-import org.jfree.data.statistics.HistogramType;
 import org.jfree.data.xy.DefaultIntervalXYDataset;
 import org.jfree.ui.ApplicationFrame;
 

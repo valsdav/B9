@@ -11,8 +11,8 @@ import it.b.view.HistogramGaussViewer;
 import it.b.view.HistogramViewer;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -22,11 +22,14 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import org.jfree.ui.RefineryUtilities;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 public class B9_Main {
 
 	private static String path = "";
+	private static String project = "";
 	private static PrintStream out = System.out;
 	private static BufferedReader in = new BufferedReader(
 			new InputStreamReader(System.in));
@@ -61,14 +64,31 @@ public class B9_Main {
 				break;
 			case "save":
 				// salvataggio
-				out.print("Project name: ");
-				String name = in.readLine();
-				if (name.equals("")) {
-					out.println("Inserire nome progetto!\n");
-					continue;
+				if (project.equals("")) {
+					out.print("Project name: ");
+					String name = in.readLine();
+					if (name.equals("")) {
+						out.println("Inserire nome progetto!\n");
+						continue;
+					} else {
+						project = name;
+						// se si cambia nome si azzera la path
+						path = "";
+					}
 				}
-				saveData(name);
+				saveData(project);
 				break;
+			case "load":
+				out.print("Project path: ");
+				String p = in.readLine();
+				try {
+					loadData(p);
+				} catch (Exception e) {
+					out.println(e.getMessage());
+				}
+				break;
+			default:
+				out.println("Inserire comando valido!");
 			}
 		}
 	}
@@ -91,6 +111,15 @@ public class B9_Main {
 				continue;
 			}
 			String[] p = cmd2.split(" ");
+			// si stampano le variabili
+			if (p[0].equals("variables")) {
+				// si stampano le variabili
+				for (Variable varia : data.getVariables().values()) {
+					out.println("\tID: " + varia.getId() + " - N: "
+							+ varia.getN());
+				}
+				continue;
+			}
 			if (p.length < 2) {
 				out.println("\tInserire parametro variable\n");
 				continue;
@@ -202,13 +231,8 @@ public class B9_Main {
 							sigma_factor, fr_rel3);
 					out.println(class_set3);
 					break;
-				case "variables":
-					// si stampano le variabili
-					for (Variable varia : data.getVariables().values()) {
-						out.println("\tID: " + varia.getId() + " - N: "
-								+ varia.getN());
-					}
-					break;
+				default:
+					out.println("Inserire comando valido!");
 				}
 			} catch (Exception e) {
 				out.println(e.getMessage());
@@ -241,7 +265,21 @@ public class B9_Main {
 			try {
 				switch (p[0]) {
 				case "histogram":
-					// si crea l'istogramma
+					// si crea l'istogramma con il class-set già caricato
+					Variable var1 = data.getVariable(v);
+					if (var1.getLast_class_set() == null) {
+						out.println("\tEseguire prima un class-set sulla variabile!\n");
+						continue;
+					}
+					HistogramViewer hist = new HistogramViewer(var1.getId(),
+							var1, var1.getLast_class_set());
+					hist.setBounds(10, 10, 500, 500);
+					RefineryUtilities.centerFrameOnScreen(hist);
+					hist.setVisible(true);
+					break;
+				case "histogram-c":
+					// si crea l'istogramma creando un class-set co i parametri
+					// passati
 					Variable var = data.getVariable(v);
 					if (p.length < 4) {
 						out.println("data>> Inserire parametri:\n"
@@ -250,12 +288,12 @@ public class B9_Main {
 					}
 					double inte = Double.parseDouble(p[2]);
 					boolean fr_rel = Boolean.parseBoolean(p[3]);
-					final ClassSet class_set = var.getClassSet(inte, fr_rel);
-					HistogramViewer hist = new HistogramViewer(var.getId(),
+					ClassSet class_set = var.getClassSet(inte, fr_rel);
+					HistogramViewer hist1 = new HistogramViewer(var.getId(),
 							var, class_set);
-					hist.setBounds(10, 10, 500, 500);
-					RefineryUtilities.centerFrameOnScreen(hist);
-					hist.setVisible(true);
+					hist1.setBounds(10, 10, 500, 500);
+					RefineryUtilities.centerFrameOnScreen(hist1);
+					hist1.setVisible(true);
 					break;
 				case "histogram-g":
 					// si crea l'istogramma
@@ -267,14 +305,15 @@ public class B9_Main {
 					}
 					double inte2 = Double.parseDouble(p[2]);
 					boolean fr_rel2 = Boolean.parseBoolean(p[3]);
-					final ClassSet class_set2 = var2
-							.getClassSet(inte2, fr_rel2);
+					ClassSet class_set2 = var2.getClassSet(inte2, fr_rel2);
 					HistogramGaussViewer hist2 = new HistogramGaussViewer(
 							var2.getId(), var2, class_set2);
 					hist2.setBounds(10, 10, 500, 500);
 					RefineryUtilities.centerFrameOnScreen(hist2);
 					hist2.setVisible(true);
 					break;
+				default:
+					out.println("Inserire comando valido!");
 				}
 			} catch (Exception e) {
 				out.println(e.getMessage());
@@ -306,8 +345,31 @@ public class B9_Main {
 			String v = p[1];
 			try {
 				switch (p[0]) {
+				case "histogram-test-c":
+					// si crea un nuovo class-set con i parametri passati.
+					Variable var1 = data.getVariable(v);
+					if (p.length < 4) {
+						out.println("data>> Inserire parametri:\n"
+								+ " larghezza intervallo, freq relativa (true/false)\n");
+						continue;
+					}
+					double inte = Double.parseDouble(p[2]);
+					boolean fr_rel = Boolean.parseBoolean(p[3]);
+					var1.getClassSet(inte, fr_rel);
+					double[] res1 = ChiSquaredTest
+							.testChiSquared_Histogram(var1);
+					// si stampano i risultati
+					out.println("Chi Quadro: ........................"
+							+ df.format(res1[0]));
+					out.println("Chi Quadro ridotto: ................"
+							+ df.format(res1[1]));
+					out.println("Probabilità: ......................."
+							+ df.format(res1[2]) + "%");
+					out.println();
+					break;
 				case "histogram-test":
-					// si esegue il test del chi per la variabile
+					// si esegue il test del chi per la variabile utilizzando il
+					// class-set già presente, se c'è
 					Variable var = data.getVariable(v);
 					if (var.getLast_class_set() == null) {
 						out.println("\tEseguire prima un class-set sulla variabile!\n");
@@ -342,6 +404,8 @@ public class B9_Main {
 						continue;
 					}
 					break;
+				default:
+					out.println("Inserire comando valido!");
 				}
 			} catch (Exception e) {
 				out.println(e.getMessage());
@@ -366,6 +430,18 @@ public class B9_Main {
 				continue;
 			}
 			String[] p = cmd2.split(" ");
+			// si stampano i fitters
+			if (p[0].equals("fitters")) {
+				for (LinearFitter fit : fitter_man.getFitters().values()) {
+					out.print("\tID: " + fit.getId() + " - N: " + fit.getN());
+					for (Variable v : fit.getVariables().values()) {
+						out.print("\n\tVariable: " + v.getId() + " - N: "
+								+ v.getN());
+					}
+					out.println();
+				}
+			}
+
 			if (p.length < 2) {
 				out.println("\tInserire nome del fitter\n");
 				continue;
@@ -442,18 +518,8 @@ public class B9_Main {
 					out.println("Sigma-AB: .............." + df.format(g[4]));
 					out.println();
 					break;
-				case "fitters":
-					// si stampano i fitters
-					for (LinearFitter fit : fitter_man.getFitters().values()) {
-						out.print("\tID: " + fit.getId() + " - N: "
-								+ fit.getN());
-						for (Variable v : fit.getVariables().values()) {
-							out.print("\n\tVariable: " + v.getId() + " - N: "
-									+ v.getN());
-						}
-						out.println();
-					}
-					break;
+				default:
+					out.println("Inserire comando valido!");
 				}
 			} catch (Exception e) {
 				out.println(e.getMessage());
@@ -493,8 +559,37 @@ public class B9_Main {
 		out.println("Progetto salvato in: " + path);
 	}
 
-	public static void loadData(String path) {
-		//si legge l'oggetto json
-		
+	/**
+	 * Metodo che carica i dati da un file B9. Carica i valori contenuti nella
+	 * variabile e le valuta.
+	 * 
+	 * @param path
+	 * @throws Exception
+	 */
+	public static void loadData(String path) throws Exception {
+		// si legge l'oggetto json
+		BufferedReader reader = new BufferedReader(new FileReader(path));
+		JSONParser parser = new JSONParser();
+		JSONObject json = (JSONObject) parser.parse(reader.readLine());
+		// si leggono le variabili
+		JSONObject vars = (JSONObject) json.get("variables");
+		project = (String) json.get("project");
+		B9_Main.path = path;
+		for (Object u : vars.keySet()) {
+			String id = (String) u;
+			// si crea la variabile
+			data.addVariable(id);
+			Variable v = data.getVariable(id);
+			JSONArray arr = (JSONArray) vars.get(id);
+			for (Object mea : arr) {
+				double m = (double) mea;
+				// si aggiunge la misura
+				v.addMeasure(m);
+			}
+			// si valuta la variabile
+			v.evaluate();
+			out.println("Loaded variable: " + id + " - N: " + v.getN());
+		}
+		reader.close();
 	}
 }
