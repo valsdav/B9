@@ -87,6 +87,14 @@ public class B9_Main {
 					out.println(e.getMessage());
 				}
 				break;
+			case "quit":
+				// si salva e si chiude
+				out.print("Uscire veramente? (y/n): ");
+				String a = in.readLine();
+				if (a.equals("y")) {
+					return;
+				}
+				break;
 			default:
 				out.println("Inserire comando valido!");
 			}
@@ -422,7 +430,7 @@ public class B9_Main {
 	private static void fit_cycle() throws IOException {
 		boolean fit_cycle = true;
 		while (fit_cycle) {
-			out.print("test>> ");
+			out.print("fit>> ");
 			String cmd2 = in.readLine();
 			if (cmd2.equals("exit")) {
 				fit_cycle = false;
@@ -435,11 +443,12 @@ public class B9_Main {
 				for (LinearFitter fit : fitter_man.getFitters().values()) {
 					out.print("\tID: " + fit.getId() + " - N: " + fit.getN());
 					for (Variable v : fit.getVariables().values()) {
-						out.print("\n\tVariable: " + v.getId() + " - N: "
+						out.print("\n\t\tVariable: " + v.getId() + " - N: "
 								+ v.getN());
 					}
 					out.println();
 				}
+				continue;
 			}
 
 			if (p.length < 2) {
@@ -539,15 +548,35 @@ public class B9_Main {
 		// si crea un oggetto json
 		JSONObject json = new JSONObject();
 		json.put("project", name);
-		LinkedHashMap<String, LinkedList<Double>> map = new LinkedHashMap<>();
+		LinkedHashMap<String, LinkedList<Double>> map_v = new LinkedHashMap<>();
+		LinkedHashMap<String, Double> X_map = new LinkedHashMap<>();
 		for (Variable v : data.getVariables().values()) {
 			LinkedList<Double> ms = new LinkedList<>();
 			for (double m : v.getMeasures()) {
 				ms.add(m);
 			}
-			map.put(v.getId(), ms);
+			map_v.put(v.getId(), ms);
+			// Se c'è la x si aggiunge
+			if (v instanceof VariableXY) {
+				X_map.put(v.getId(), ((VariableXY) v).getX());
+			}
 		}
-		json.put("variables", map);
+		// mappa delle variabili
+		json.put("variables", map_v);
+		json.put("x_map", X_map);
+		// si inseriscono i fitter
+		LinkedHashMap<String, LinkedList<String>> map_f = new LinkedHashMap<>();
+		for (LinearFitter v : fitter_man.getFitters().values()) {
+			LinkedList<String> ms = new LinkedList<>();
+			for (VariableXY va : v.getVariables().values()) {
+				ms.add(va.getId());
+			}
+			map_f.put(v.getId(), ms);
+		}
+		// mappa dei fitter
+		json.put("fitters", map_f);
+
+		// scrittura su file
 		if (path.equals("")) {
 			path = System.getProperty("user.home") + File.separator + name
 					+ ".B9";
@@ -573,8 +602,11 @@ public class B9_Main {
 		JSONObject json = (JSONObject) parser.parse(reader.readLine());
 		// si leggono le variabili
 		JSONObject vars = (JSONObject) json.get("variables");
+		JSONObject x_map = (JSONObject) json.get("x_map");
+		JSONObject fitts = (JSONObject) json.get("fitters");
 		project = (String) json.get("project");
 		B9_Main.path = path;
+		// si leggono le variabili
 		for (Object u : vars.keySet()) {
 			String id = (String) u;
 			// si crea la variabile
@@ -589,6 +621,28 @@ public class B9_Main {
 			// si valuta la variabile
 			v.evaluate();
 			out.println("Loaded variable: " + id + " - N: " + v.getN());
+		}
+		// si leggono le x delle varibili
+		for (Object m : x_map.keySet()) {
+			String id = (String) m;
+			// si aggiunge alla variabile la sua x
+			double x = (double) x_map.get(m);
+			data.addX_toVariable(id, x);
+		}
+		// si leggono i fitter
+		for (Object f : fitts.keySet()) {
+			String id = (String) f;
+			// si crea la variabile
+			fitter_man.addLinearFitter(id);
+			LinearFitter fit = fitter_man.getLinearFitter(id);
+			JSONArray arr = (JSONArray) fitts.get(id);
+			for (Object v : arr) {
+				String m = (String) v;
+				// si aggiunge la misura
+				VariableXY var = (VariableXY) data.getVariable(m);
+				fit.addVariable(var);
+			}
+			out.println("Loaded fitter: " + id + " - N: " + fit.getN());
 		}
 		reader.close();
 	}

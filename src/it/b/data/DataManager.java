@@ -34,6 +34,16 @@ public class DataManager {
 		}
 	}
 
+	/**Metodo che trasforma una variabile normale in una XY
+	 * @param id
+	 * @param x
+	 */
+	public void addX_toVariable(String id, double x) {
+		if (variables.containsKey(id)) {
+			variables.put(id, new VariableXY(variables.get(id),x));
+		}
+	}
+
 	public Variable getVariable(String id) throws Exception {
 		if (variables.containsKey(id)) {
 			return variables.get(id);

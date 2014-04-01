@@ -16,6 +16,13 @@ public class VariableXY extends Variable {
 		this.X = x;
 	}
 
+	public VariableXY(Variable v, double x) {
+		super(v.getId());
+		super.addMeasures(v.getMeasures());
+		this.X = x;
+		this.evaluate();
+	}
+
 	public double getX() {
 		return X;
 	}
