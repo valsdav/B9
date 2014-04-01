@@ -14,7 +14,7 @@ public class FitterManager {
 
 	private Map<String, LinearFitter> fitters;
 
-	private FitterManager() {
+	public FitterManager() {
 		this.fitters = new HashMap<>();
 	}
 
@@ -25,7 +25,7 @@ public class FitterManager {
 	 * @param vars
 	 * @return
 	 */
-	private LinearFitter addLinearFitter(String id, List<VariableXY> vars) {
+	public LinearFitter addLinearFitter(String id, List<VariableXY> vars) {
 		if (!fitters.containsKey(id)) {
 			this.fitters.put(id, new LinearFitter(id, vars));
 		}
@@ -36,18 +36,18 @@ public class FitterManager {
 	 * @param id
 	 * @return
 	 */
-	private LinearFitter addLinearFitter(String id) {
+	public LinearFitter addLinearFitter(String id) {
 		if (!fitters.containsKey(id)) {
 			this.fitters.put(id, new LinearFitter(id));
 		}
 		return fitters.get(id);
 	}
 	
-	private LinearFitter getLinearFitter(String id){
+	public LinearFitter getLinearFitter(String id){
 		return this.fitters.get(id);
 	}
 
-	private boolean containsFitter(String id) {
+	public  boolean containsFitter(String id) {
 		if (fitters.containsKey(id)) {
 			return true;
 		} else {
@@ -55,7 +55,7 @@ public class FitterManager {
 		}
 	}
 	
-	private Map<String, LinearFitter> getFitters(){
+	public Map<String, LinearFitter> getFitters(){
 		return this.fitters;
 	}
 }

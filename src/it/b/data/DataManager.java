@@ -11,7 +11,9 @@ public class DataManager {
 		this.variables = new HashMap<>();
 	}
 
-	/**Metodo che aggiunge una variabile normale
+	/**
+	 * Metodo che aggiunge una variabile normale
+	 * 
 	 * @param id
 	 */
 	public void addVariable(String id) {
@@ -19,19 +21,25 @@ public class DataManager {
 			variables.put(id, new Variable(id));
 		}
 	}
-	
-	/**Metodo che aggiunge una variabile xy
+
+	/**
+	 * Metodo che aggiunge una variabile xy
+	 * 
 	 * @param id
 	 * @param x
 	 */
-	public void addXYVariable(String id,double x) {
+	public void addVariableXY(String id, double x) {
 		if (!variables.containsKey(id)) {
-			variables.put(id, new VariableXY(id,x));
+			variables.put(id, new VariableXY(id, x));
 		}
 	}
 
-	public Variable getVariable(String id) {
-		return variables.get(id);
+	public Variable getVariable(String id) throws Exception {
+		if (variables.containsKey(id)) {
+			return variables.get(id);
+		} else {
+			throw new Exception("Variabile non presente!");
+		}
 	}
 
 	public boolean containsVariable(String id) {
