@@ -47,13 +47,9 @@ public class HistogramGaussViewer extends ApplicationFrame {
 		super(title);
 		final CategoryDataset dataset1 = createDataset1(set);
 		// create the chart...
-		final JFreeChart chart = ChartFactory.createBarChart("Dual Axis Chart", // chart
-																				// title
-				"Category", // domain axis label
-				"Value", // range axis label
+		final JFreeChart chart = ChartFactory.createBarChart(title, "X", "P", 
 				dataset1, // data
-				PlotOrientation.VERTICAL, true, // include legend
-				true, // tooltips?
+				PlotOrientation.VERTICAL, false, false, // tooltips?
 				false // URL generator? Not required...
 				);
 
@@ -66,14 +62,14 @@ public class HistogramGaussViewer extends ApplicationFrame {
 		plot.setBackgroundPaint(new Color(0xEE, 0xEE, 0xFF));
 		plot.setDomainAxisLocation(AxisLocation.BOTTOM_OR_RIGHT);
 
-//		final CategoryDataset dataset2 = createDataset2(var, set);
-//		plot.setDataset(1, dataset2);
-//		plot.mapDatasetToRangeAxis(1, 1);
+		// final CategoryDataset dataset2 = createDataset2(var, set);
+		// plot.setDataset(1, dataset2);
+		// plot.mapDatasetToRangeAxis(1, 1);
 
 		final CategoryAxis domainAxis = plot.getDomainAxis();
 		domainAxis.setCategoryLabelPositions(CategoryLabelPositions.DOWN_45);
-//		 final ValueAxis axis2 = new NumberAxis("Secondary");
-//	        plot.setRangeAxis(1, axis2);
+		// final ValueAxis axis2 = new NumberAxis("Secondary");
+		// plot.setRangeAxis(1, axis2);
 
 		final LineAndShapeRenderer renderer2 = new LineAndShapeRenderer();
 		plot.setRenderer(1, renderer2);
@@ -116,7 +112,7 @@ public class HistogramGaussViewer extends ApplicationFrame {
 			if (set.isRelative_freqs()) {
 				g = dist.density(d);
 			} else {
-				g = dist.density(d)* var.getN();
+				g = dist.density(d) * var.getN();
 			}
 			dataset.addValue(g, "g", df.format(d));
 		}

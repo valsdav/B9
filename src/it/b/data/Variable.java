@@ -1,5 +1,8 @@
 package it.b.data;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -158,6 +161,7 @@ public class Variable {
 		double first_next, first_prev;
 		first_next = mean_l + halfint;
 		first_prev = mean_l - halfint;
+		classset.put(mean_l, 0.0);
 		double current = first_next;
 		while (current <= max) {
 			// si inseriscono le classi
@@ -213,6 +217,24 @@ public class Variable {
 	}
 
 	/**
+	 * Metodo che restituisce i valori di x per i valore centrali degli
+	 * intervalli del class-set.
+	 * 
+	 * @return
+	 */
+	public List<Double> getGaussianY() {
+		if (this.last_class_set == null) {
+			return new ArrayList<>();
+		}
+		List<Double> xs = new ArrayList<>();
+		NormalDistribution dist = getNormalDistribution();
+		for (double x : this.last_class_set.getFreq_map().keySet()) {
+			xs.add(dist.density(x));
+		}
+		return xs;
+	}
+
+	/**
 	 * Restituisce l'ultimo valore stimato della media
 	 * 
 	 * @return
@@ -255,6 +277,20 @@ public class Variable {
 	 */
 	public double getDev_stand_avg() {
 		return dev_stan_avg;
+	}
+
+	/**
+	 * Metodo che esporta la variabile in formato cvs.
+	 * 
+	 * @param path
+	 * @throws IOException
+	 */
+	public void exportCVS(String path) throws IOException {
+		FileWriter wri = new FileWriter(path + File.separator + this.getId());
+		for (double m : this.measures) {
+			wri.write(Double.toString(m) + ";");
+		}
+		wri.close();
 	}
 
 	public String getId() {

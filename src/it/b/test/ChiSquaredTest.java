@@ -50,7 +50,7 @@ public class ChiSquaredTest {
 		}
 		// si legge la probabilità di questo chi
 		ChiSquaredDistribution chi_dist = new ChiSquaredDistribution(
-				l_grades - 1);
+				l_grades - 3);
 		double chi_p = (1 - chi_dist.cumulativeProbability(chi_squared)) * 100;
 		double chi_ridotto = chi_squared / l_grades;
 		// si salva il risultato

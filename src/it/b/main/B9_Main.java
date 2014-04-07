@@ -10,6 +10,7 @@ import it.b.test.ChiSquaredTest;
 import it.b.view.HistogramGaussViewer;
 import it.b.view.HistogramViewer;
 
+import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -18,8 +19,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import org.jfree.ui.RefineryUtilities;
 import org.json.simple.JSONArray;
@@ -45,7 +49,7 @@ public class B9_Main {
 		boolean ok = true;
 		while (ok) {
 			out.print(">> ");
-			String cmd = in.readLine();
+			String cmd = in.readLine().trim();
 
 			switch (cmd) {
 			case "data":
@@ -62,6 +66,9 @@ public class B9_Main {
 				// ciclo per i test
 				test_cycle();
 				break;
+			case "settings":
+				settings_cycle();
+				break;
 			case "save":
 				// salvataggio
 				if (project.equals("")) {
@@ -76,7 +83,7 @@ public class B9_Main {
 						path = "";
 					}
 				}
-				saveData(project);
+				saveData(path, project);
 				break;
 			case "load":
 				out.print("Project path: ");
@@ -110,7 +117,7 @@ public class B9_Main {
 		boolean data_cycle = true;
 		while (data_cycle) {
 			out.print("data>> ");
-			String cmd2 = in.readLine();
+			String cmd2 = in.readLine().trim();
 			if (cmd2.equals("")) {
 				continue;
 			} else if (cmd2.equals("exit")) {
@@ -165,6 +172,10 @@ public class B9_Main {
 					Variable var = data.getVariable(v);
 					double[] e = var.evaluate();
 					out.println("N: ...................." + df.format(e[0]));
+					if (var instanceof VariableXY) {
+						out.println("X: ...................."
+								+ df.format(((VariableXY) var).getX()));
+					}
 					out.println("Media: ................" + df.format(e[1]));
 					out.println("Varianza: ............." + df.format(e[2]));
 					out.println("Varianza Media: ......." + df.format(e[3]));
@@ -239,6 +250,43 @@ public class B9_Main {
 							sigma_factor, fr_rel3);
 					out.println(class_set3);
 					break;
+				case "gauss-y":
+					Variable var8 = data.getVariable(v);
+					ClassSet set = var8.getLast_class_set();
+					List<Double > y = var8.getGaussianY();
+					Set<Double> xs = set.getFreq_map().keySet();
+					Iterator it = xs.iterator();
+					
+					for(int j =0; j< set.getNumberOfBins();j++){
+						out.println("\t"+ df.format(it.next())+" - "+ df.format(y.get(j)));
+					}
+					out.println();
+					break;
+				case "set-x":
+					if (p.length < 3) {
+						out.println("data>> Inserire parametri:\n"
+								+ " id variabile, X da inserire\n");
+						continue;
+					}
+					Variable var6 = data.getVariable(v);
+					if (var6 instanceof VariableXY) {
+						((VariableXY) var6).setX(Double.parseDouble(p[2]));
+					} else {
+						out.println("data>> Inserire variabile di tipo XY\n");
+						continue;
+					}
+					break;
+				case "export-cvs":
+					if (p.length < 2) {
+						out.println("data>> Inserire parametri:\n"
+								+ " id variabile\n");
+						continue;
+					}
+					Variable var7 = data.getVariable(v);
+					var7.exportCVS(path);
+					out.println("Salvata variabile " + var7.getId() + " in "
+							+ path + File.separator + var7.getId());
+					break;
 				default:
 					out.println("Inserire comando valido!");
 				}
@@ -258,7 +306,7 @@ public class B9_Main {
 		boolean graph_cycle = true;
 		while (graph_cycle) {
 			out.print("graph>> ");
-			String cmd2 = in.readLine();
+			String cmd2 = in.readLine().trim();
 			if (cmd2.equals("exit")) {
 				graph_cycle = false;
 				out.println("exit graph menu...\n");
@@ -274,16 +322,25 @@ public class B9_Main {
 				switch (p[0]) {
 				case "histogram":
 					// si crea l'istogramma con il class-set già caricato
-					Variable var1 = data.getVariable(v);
+					final Variable var1 = data.getVariable(v);
 					if (var1.getLast_class_set() == null) {
 						out.println("\tEseguire prima un class-set sulla variabile!\n");
 						continue;
 					}
-					HistogramViewer hist = new HistogramViewer(var1.getId(),
-							var1, var1.getLast_class_set());
-					hist.setBounds(10, 10, 500, 500);
-					RefineryUtilities.centerFrameOnScreen(hist);
-					hist.setVisible(true);
+					EventQueue.invokeLater(new Runnable() {
+						public void run() {
+							try {
+								HistogramViewer hist = new HistogramViewer(var1
+										.getId(), var1, var1
+										.getLast_class_set());
+								hist.setBounds(10, 10, 500, 500);
+								RefineryUtilities.centerFrameOnScreen(hist);
+								hist.setVisible(true);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					});
 					break;
 				case "histogram-c":
 					// si crea l'istogramma creando un class-set co i parametri
@@ -304,6 +361,26 @@ public class B9_Main {
 					hist1.setVisible(true);
 					break;
 				case "histogram-g":
+					// si crea l'istogramma
+					Variable var3 = data.getVariable(v);
+					if (var3.getLast_class_set() == null) {
+						out.println("\tEseguire prima un class-set sulla variabile!\n");
+						continue;
+					}
+					if (p.length < 4) {
+						out.println("data>> Inserire parametri:\n"
+								+ " larghezza intervallo, freq relativa (true/false)\n");
+						continue;
+					}
+					double inte3 = Double.parseDouble(p[2]);
+					boolean fr_rel3 = Boolean.parseBoolean(p[3]);
+					HistogramGaussViewer hist3= new HistogramGaussViewer(
+							var3.getId(), var3, var3.getLast_class_set());
+					hist3.setBounds(10, 10, 500, 500);
+					RefineryUtilities.centerFrameOnScreen(hist3);
+					hist3.setVisible(true);
+					break;
+				case "histogram-g-c":
 					// si crea l'istogramma
 					Variable var2 = data.getVariable(v);
 					if (p.length < 4) {
@@ -339,7 +416,7 @@ public class B9_Main {
 		boolean test_cycle = true;
 		while (test_cycle) {
 			out.print("test>> ");
-			String cmd2 = in.readLine();
+			String cmd2 = in.readLine().trim();
 			if (cmd2.equals("exit")) {
 				test_cycle = false;
 				out.println("exit test menu...\n");
@@ -431,7 +508,7 @@ public class B9_Main {
 		boolean fit_cycle = true;
 		while (fit_cycle) {
 			out.print("fit>> ");
-			String cmd2 = in.readLine();
+			String cmd2 = in.readLine().trim();
 			if (cmd2.equals("exit")) {
 				fit_cycle = false;
 				out.println("exit fit menu...\n");
@@ -537,6 +614,60 @@ public class B9_Main {
 		}
 	}
 
+	private static void settings_cycle() throws IOException {
+		boolean settings_cycle = true;
+		while (settings_cycle) {
+			out.print("settings>> ");
+			String cmd2 = in.readLine().trim();
+			if (cmd2.equals("exit")) {
+				settings_cycle = false;
+				out.println("exit settings menu...\n");
+				continue;
+			}
+			String[] p = cmd2.split(" ");
+			// si stampano le settings correnti
+			if (p[0].equals("settings")) {
+				out.println("Decimal format: " + df.toPattern());
+				if (!path.equals("")) {
+					out.println("Current path: " + path);
+				} else {
+					out.println("Current path: not set");
+				}
+				if (!project.equals("")) {
+					out.println("Current project name: " + project);
+				} else {
+					out.println("Current project name: not set");
+				}
+				continue;
+			}
+			if (p.length < 2) {
+				out.println("\tInserire parametro da modificare\n");
+				continue;
+			}
+			String pat = p[1];
+			try {
+				// comandi
+				switch (p[0]) {
+				case "decimal-format":
+					// si imposta il pattern
+					df = new DecimalFormat(pat);
+					break;
+				case "path":
+					path = pat;
+					break;
+				case "project-name":
+					project = pat;
+					break;
+				default:
+					out.println("Inserire comando valido!");
+				}
+			} catch (Exception e) {
+				out.println(e.getMessage());
+				continue;
+			}
+		}
+	}
+
 	/**
 	 * Metodo che salva i dati su disco. Si salvano in un unico file tutte le
 	 * variabili.
@@ -544,7 +675,7 @@ public class B9_Main {
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")
-	public static void saveData(String name) throws IOException {
+	private static void saveData(String path, String name) throws IOException {
 		// si crea un oggetto json
 		JSONObject json = new JSONObject();
 		json.put("project", name);
@@ -575,17 +706,19 @@ public class B9_Main {
 		}
 		// mappa dei fitter
 		json.put("fitters", map_f);
-
+		String path_touse;
 		// scrittura su file
 		if (path.equals("")) {
-			path = System.getProperty("user.home") + File.separator + name
-					+ ".B9";
+			path_touse = System.getProperty("user.home") + File.separator
+					+ name + ".b9";
+		} else {
+			path_touse = path + File.separator + name + ".b9";
 		}
 		// si scrive l'oggetto
-		FileWriter w = new FileWriter(path);
+		FileWriter w = new FileWriter(path_touse);
 		w.write(json.toJSONString());
 		w.close();
-		out.println("Progetto salvato in: " + path);
+		out.println("Progetto salvato in: " + path_touse);
 	}
 
 	/**
@@ -595,7 +728,7 @@ public class B9_Main {
 	 * @param path
 	 * @throws Exception
 	 */
-	public static void loadData(String path) throws Exception {
+	private static void loadData(String path) throws Exception {
 		// si legge l'oggetto json
 		BufferedReader reader = new BufferedReader(new FileReader(path));
 		JSONParser parser = new JSONParser();
@@ -605,7 +738,9 @@ public class B9_Main {
 		JSONObject x_map = (JSONObject) json.get("x_map");
 		JSONObject fitts = (JSONObject) json.get("fitters");
 		project = (String) json.get("project");
-		B9_Main.path = path;
+		// si salva il percorso relativo
+		B9_Main.path = path
+				.substring(0, path.length() - (project.length() + 4));
 		// si leggono le variabili
 		for (Object u : vars.keySet()) {
 			String id = (String) u;
