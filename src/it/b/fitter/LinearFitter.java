@@ -104,6 +104,10 @@ public class LinearFitter {
 	public Map<Double, VariableXY> getVars_map() {
 		return vars_map;
 	}
+	
+	public void removeVar(double x){
+		this.vars_map.remove(x);
+	}
 
 	public double getA() {
 		return A;

@@ -6,9 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**Gestore dei fitter.
+/**
+ * Gestore dei fitter.
+ * 
  * @author archdav
- *
+ * 
  */
 public class FitterManager {
 
@@ -31,8 +33,10 @@ public class FitterManager {
 		}
 		return fitters.get(id);
 	}
-	
-	/** Si crea il linear_fitter senza lista di variabili.
+
+	/**
+	 * Si crea il linear_fitter senza lista di variabili.
+	 * 
 	 * @param id
 	 * @return
 	 */
@@ -42,20 +46,45 @@ public class FitterManager {
 		}
 		return fitters.get(id);
 	}
-	
-	public LinearFitter getLinearFitter(String id){
+
+	/**
+	 * Metodo che rimuove un fitter.
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public boolean removeLinearFitter(String id) {
+		if (fitters.containsKey(id)) {
+			fitters.remove(id);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**Metodo che rimuove una certa variabile XY identificata dalla x da un fitter.
+	 * @param id
+	 * @param x
+	 */
+	public void removeVariableFromFitter(String id, double x) {
+		if (fitters.containsKey(id)) {
+			fitters.get(id).removeVar(x);;
+		}
+	}
+
+	public LinearFitter getLinearFitter(String id) {
 		return this.fitters.get(id);
 	}
 
-	public  boolean containsFitter(String id) {
+	public boolean containsFitter(String id) {
 		if (fitters.containsKey(id)) {
 			return true;
 		} else {
 			return false;
 		}
 	}
-	
-	public Map<String, LinearFitter> getFitters(){
+
+	public Map<String, LinearFitter> getFitters() {
 		return this.fitters;
 	}
 }

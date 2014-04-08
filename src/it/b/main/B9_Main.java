@@ -55,7 +55,7 @@ public class B9_Main {
 			case "data":
 				data_cycle();
 				break;
-			case "fit":
+			case "fitting":
 				fit_cycle();
 				break;
 			case "graph":
@@ -160,9 +160,12 @@ public class B9_Main {
 					out.println("\tCreata variabile: " + v + "\n");
 					break;
 				case "remove":
-					//rimuove la variabile
-					data.removeVariable(v);
-					out.println("\tRimossa variabile: "+ v + "\n");
+					// rimuove la variabile
+					if (data.removeVariable(v)) {
+						out.println("\tRimossa variabile: " + v + "\n");
+					} else {
+						out.println("variabile non trovata: " + v);
+					}
 					break;
 				case "values":
 					// si stampano i valori
@@ -506,7 +509,7 @@ public class B9_Main {
 	private static void fit_cycle() throws IOException {
 		boolean fit_cycle = true;
 		while (fit_cycle) {
-			out.print("fit>> ");
+			out.print("fittin>> ");
 			String cmd2 = in.readLine().trim();
 			if (cmd2.equals("exit")) {
 				fit_cycle = false;
@@ -570,6 +573,30 @@ public class B9_Main {
 					}
 					out.println();
 					break;
+				case "remove-variables":
+					if (p.length < 3) {
+						out.println("data>> Inserire parametri:\n"
+								+ " id fitter, variabile-xy da rimuovere\n");
+						continue;
+					}
+					LinearFitter fitter1 = fitter_man.getLinearFitter(f);
+					Variable v = data.getVariable(p[2]);
+					if (v instanceof VariableXY) {
+						double x = ((VariableXY) v).getX();
+						fitter_man.removeVariableFromFitter(f, x);
+						out.println("Rimossa variabile " + p[2]
+								+ " da fitter: " + f);
+					} else {
+						out.println("Inserire una variabile di tipo XY...");
+					}
+					break;
+				case "remove-fitter":
+					if (fitter_man.removeLinearFitter(f)) {
+
+						out.println("Rimosso fitter: " + f);
+					} else {
+						out.println("Fitter non trovato: " + f);
+					}
 				case "fit-sigma-costant":
 					// fitting con sigma per y costante
 					// si legge il terzo parametro
