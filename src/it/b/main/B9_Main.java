@@ -253,12 +253,13 @@ public class B9_Main {
 				case "gauss-y":
 					Variable var8 = data.getVariable(v);
 					ClassSet set = var8.getLast_class_set();
-					List<Double > y = var8.getGaussianY();
+					List<Double> y = var8.getGaussianY();
 					Set<Double> xs = set.getFreq_map().keySet();
 					Iterator it = xs.iterator();
-					
-					for(int j =0; j< set.getNumberOfBins();j++){
-						out.println("\t"+ df.format(it.next())+" - "+ df.format(y.get(j)));
+
+					for (int j = 0; j < set.getNumberOfBins(); j++) {
+						out.println("\t" + df.format(it.next()) + " - "
+								+ df.format(y.get(j)));
 					}
 					out.println();
 					break;
@@ -367,14 +368,7 @@ public class B9_Main {
 						out.println("\tEseguire prima un class-set sulla variabile!\n");
 						continue;
 					}
-					if (p.length < 4) {
-						out.println("data>> Inserire parametri:\n"
-								+ " larghezza intervallo, freq relativa (true/false)\n");
-						continue;
-					}
-					double inte3 = Double.parseDouble(p[2]);
-					boolean fr_rel3 = Boolean.parseBoolean(p[3]);
-					HistogramGaussViewer hist3= new HistogramGaussViewer(
+					HistogramGaussViewer hist3 = new HistogramGaussViewer(
 							var3.getId(), var3, var3.getLast_class_set());
 					hist3.setBounds(10, 10, 500, 500);
 					RefineryUtilities.centerFrameOnScreen(hist3);
@@ -651,6 +645,7 @@ public class B9_Main {
 				case "decimal-format":
 					// si imposta il pattern
 					df = new DecimalFormat(pat);
+					out.println("New deciamal-format: " + df.toPattern());
 					break;
 				case "path":
 					path = pat;
