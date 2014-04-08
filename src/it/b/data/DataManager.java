@@ -33,6 +33,20 @@ public class DataManager {
 			variables.put(id, new VariableXY(id, x));
 		}
 	}
+	
+	/**
+	 * Metodo che rimuove una variabile.
+	 * @param id
+	 * @return
+	 */
+	public boolean removeVariable(String id){
+		if(variables.containsKey(id)){
+			variables.remove(id);
+			return true;
+		}else{
+			return false;
+		}
+	}
 
 	/**Metodo che trasforma una variabile normale in una XY
 	 * @param id

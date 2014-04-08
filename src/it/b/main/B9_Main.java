@@ -159,6 +159,11 @@ public class B9_Main {
 					data.addVariableXY(v, x);
 					out.println("\tCreata variabile: " + v + "\n");
 					break;
+				case "remove":
+					//rimuove la variabile
+					data.removeVariable(v);
+					out.println("\tRimossa variabile: "+ v + "\n");
+					break;
 				case "values":
 					// si stampano i valori
 					Variable va = data.getVariable(v);
